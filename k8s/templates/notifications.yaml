@@ -1,0 +1,43 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notifications
+  labels:
+    app: notifications
+spec:
+  selector:
+    matchLabels:
+      app: notifications
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: notifications
+    spec:
+      containers:
+        - name: notifications
+          image: jdvincent/dragonfly-notifications:latest
+          imagePullPolicy: Always
+          env:
+            - name: DRAGONFLYDB_HOST
+              value: dragonfly
+            - name: DRAGONFLYDB_PORT
+              value: "6379"
+          ports:
+            - name: notifications
+              containerPort: 8000
+              protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notifications
+spec:
+  ports:
+    - port: 8000
+      targetPort: 8000
+      name: notifications
+  selector:
+    app: notifications
+  type: ClusterIP

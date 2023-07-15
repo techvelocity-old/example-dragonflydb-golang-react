@@ -1,0 +1,44 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: file-processing
+  labels:
+    app: file-processing
+spec:
+  selector:
+    matchLabels:
+      app: file-processing
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: file-processing
+    spec:
+      containers:
+        - name: web-api
+          image: jdvincent/dragonfly-file-processing:latest
+          imagePullPolicy: Always
+          env:
+            - name: DRAGONFLYDB_HOST
+              value: dragonfly
+            - name: DRAGONFLYDB_PORT
+              value: "6379"
+
+          ports:
+            - name: file-processing
+              containerPort: 8000
+              protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: file-processing
+spec:
+  ports:
+    - port: 8000
+      targetPort: 8000
+      name: file-processing
+  selector:
+    app: file-processing
+  type: ClusterIP

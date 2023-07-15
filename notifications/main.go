@@ -1,19 +1,21 @@
 package main
 
 import (
-	"log"
-	"net/http"
-	"sync"
-	"time"
-
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis"
 	"github.com/gorilla/websocket"
+	"log"
+	"net/http"
+	"os"
+	"sync"
 )
 
-const (
-	redisQueuePrefix = "fileStatusQueue:"
-	pingInterval     = 10 * time.Second
+var (
+	dragonflyQueuePrefix = "fileStatusQueue:"
+	dragonflyHost        = os.Getenv("DRAGONFLYDB_HOST")
+	dragonflyPort        = os.Getenv("DRAGONFLYDB_PORT")
+	dragonflyAddr        = fmt.Sprintf("%s:%s", dragonflyHost, dragonflyPort)
 )
 
 var upgrader = websocket.Upgrader{
@@ -27,7 +29,7 @@ var connections sync.Map
 func main() {
 	// Initialize Redis client
 	client := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
+		Addr:     dragonflyAddr,
 		Password: "", // Add password if required
 		DB:       0,  // Select appropriate Redis database
 	})
@@ -61,12 +63,12 @@ func main() {
 			connections.Delete(userID)
 
 			// Remove the Redis queue channel
-			queueKey := redisQueuePrefix + userID
+			queueKey := dragonflyQueuePrefix + userID
 			client.Del(queueKey)
 		}()
 
 		// Create the user-specific Redis queue
-		queueKey := redisQueuePrefix + userID
+		queueKey := dragonflyQueuePrefix + userID
 
 		// Read messages from Redis queue and send file status updates to the WebSocket client
 		for {
@@ -96,7 +98,7 @@ func main() {
 	})
 
 	// Run the Gin server
-	err = router.Run(":8082")
+	err = router.Run(":8000")
 	if err != nil {
 		log.Fatal(err)
 	}

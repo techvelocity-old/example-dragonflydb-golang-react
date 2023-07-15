@@ -2,26 +2,31 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"log"
 	"mime/multipart"
 	"net/http"
+	"os"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis"
 )
 
-const (
-	redisQueuePrefix = "fileStatusQueue:"
-	redisStatus      = "processing"
-	uploadAPIURL     = "http://localhost:8081/upload"
+var (
+	dragonflyQueuePrefix = "fileStatusQueue:"
+	redisStatus          = "processing"
+	dragonflyHost        = os.Getenv("DRAGONFLYDB_HOST")
+	dragonflyPort        = os.Getenv("DRAGONFLYDB_PORT")
+	dragonflyAddr        = fmt.Sprintf("%s:%s", dragonflyHost, dragonflyPort)
+	uploadAPIURL         = "http://file-processing:8000/upload"
 )
 
 func main() {
 	// Initialize Redis client
 	client := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
+		Addr:     dragonflyAddr,
 		Password: "", // Add password if required
 		DB:       0,  // Select appropriate Redis database
 	})
@@ -33,7 +38,7 @@ func main() {
 	router.Use(cors.Default())
 
 	// API route to handle file uploads
-	router.POST("/upload", func(c *gin.Context) {
+	router.POST("/api/upload", func(c *gin.Context) {
 		// Get the file from the form data
 		file, err := c.FormFile("file")
 		if err != nil {
@@ -45,7 +50,7 @@ func main() {
 		userID := c.PostForm("userID")
 
 		// Create the user-specific Redis queue key
-		queueKey := redisQueuePrefix + userID
+		queueKey := dragonflyQueuePrefix + userID
 
 		// Push the file upload task to the user-specific Redis queue
 		err = client.RPush(queueKey, file.Filename).Err()
@@ -70,7 +75,7 @@ func main() {
 	})
 
 	// Run the Gin server
-	err := router.Run(":8080")
+	err := router.Run(":8000")
 	if err != nil {
 		log.Fatal(err)
 	}
