@@ -16,7 +16,7 @@ import (
 
 var (
 	dragonflyQueuePrefix = "fileStatusQueue:"
-	redisStatus          = "processing"
+	dragonflyStatus      = "processing"
 	dragonflyHost        = os.Getenv("DRAGONFLYDB_HOST")
 	dragonflyPort        = os.Getenv("DRAGONFLYDB_PORT")
 	dragonflyAddr        = fmt.Sprintf("%s:%s", dragonflyHost, dragonflyPort)
@@ -61,7 +61,7 @@ func main() {
 		}
 
 		// Publish the "processing" status to the user-specific Redis queue
-		err = client.RPush(queueKey, redisStatus).Err()
+		err = client.RPush(queueKey, dragonflyStatus).Err()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to publish status"})
 			log.Println("Failed to publish status:", err)

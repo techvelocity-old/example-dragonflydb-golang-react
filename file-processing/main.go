@@ -1,19 +1,19 @@
 package main
 
 import (
+	"encoding/csv"
 	"fmt"
-	"log"
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis"
+	"log"
+	"mime/multipart"
+	"net/http"
 	"os"
-	"time"
 )
 
 var (
 	dragonflyQueuePrefix = "fileStatusQueue:"
-	redisStatus          = "completed"
+	dragonflyStatus      = "completed"
 	dragonflyHost        = os.Getenv("DRAGONFLYDB_HOST")
 	dragonflyPort        = os.Getenv("DRAGONFLYDB_PORT")
 	dragonflyAddr        = fmt.Sprintf("%s:%s", dragonflyHost, dragonflyPort)
@@ -40,7 +40,14 @@ func main() {
 		}
 
 		// Simulate file processing time
-		time.Sleep(time.Second * 10)
+		//time.Sleep(time.Second * 10)
+		r := parseCSV(file)
+		fmt.Println(r)
+		if !r {
+			dragonflyStatus = "failed"
+		} else {
+			dragonflyStatus = "completed"
+		}
 
 		// Get the userID from the form data
 		userID := c.PostForm("userID")
@@ -56,7 +63,7 @@ func main() {
 		}
 
 		// Publish the "processing" status to the user-specific Redis queue
-		err = client.RPush(queueKey, redisStatus).Err()
+		err = client.RPush(queueKey, dragonflyStatus).Err()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to publish status"})
 			return
@@ -68,4 +75,25 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func parseCSV(file *multipart.FileHeader) bool {
+	srcFile, err := file.Open()
+	if err != nil {
+		log.Println("Failed to open file:", err)
+		return false
+	}
+	reader := csv.NewReader(srcFile)
+	records, err := reader.ReadAll()
+	if err != nil {
+		fmt.Println("Error reading CSV:", err)
+		return false
+	}
+
+	// Print each record
+	for _, record := range records {
+		fmt.Println(record)
+	}
+	return true
+
 }
