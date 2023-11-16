@@ -21,7 +21,7 @@ const UploadComponent = () => {
             formData.append('userID', userID);
 
             // Send file and userID to the upload API
-            await fetch('/api/upload', {
+            await fetch('http://localhost/api/upload', {
                 method: 'POST',
                 body: formData,
             });
@@ -37,7 +37,7 @@ const UploadComponent = () => {
         }
 
         // Set up WebSocket connection when uploading completes
-        const ws = new WebSocket(`ws://138.2.236.153/notifications/ws/${userID}`);
+        const ws = new WebSocket(`ws://localhost/notifications/ws/${userID}`);
 
         // Handle WebSocket message
         ws.onmessage = (event) => {

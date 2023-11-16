@@ -17,13 +17,15 @@ spec:
     spec:
       containers:
         - name: web-api
-          image: jdvincent/dragonfly-web-api:latest
-          imagePullPolicy: Always
+          image: dragonfly-web-api:latest
+          imagePullPolicy: Never
           env:
             - name: DRAGONFLYDB_HOST
               value: dragonfly
             - name: DRAGONFLYDB_PORT
               value: "6379"
+            - name: UPLOAD_API_URL
+              value: "http://file-processing:8000/upload"
 
           ports:
             - name: web-api

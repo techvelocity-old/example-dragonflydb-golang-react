@@ -17,8 +17,8 @@ spec:
     spec:
       containers:
         - name: web-api
-          image: jdvincent/dragonfly-file-processing:latest
-          imagePullPolicy: Always
+          image: dragonfly-file-processing:latest
+          imagePullPolicy: Never
           env:
             - name: DRAGONFLYDB_HOST
               value: dragonfly

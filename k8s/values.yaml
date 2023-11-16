@@ -1,17 +1,15 @@
 frontend:
   containers:
-    image: jdvincent/dragonfly-frontend:latest
+    image: dragonfly-frontend:latest
 
 web-api:
   containers:
-    image: jdvincent/dragonfly-web-api:latest
+    image: dragonfly-web-api:latest
 
 notifications:
   containers:
-    image: jdvincent/dragonfly-notifications:latest
+    image: dragonfly-notifications:latest
 
 file-processing:
   containers:
-    image: jdvincent/dragonfly-file-processing:latest
-
-
+    image: dragonfly-file-processing:latest
